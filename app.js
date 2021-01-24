@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo")(session);
 // const cors = require("cors");
-const auth = require("./routes/auth");
+const auth = require("./routes");
 
 
 
