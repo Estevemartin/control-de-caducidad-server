@@ -8,8 +8,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo")(session);
-// const cors = require("cors");
-const auth = require("./routes");
+const cors = require("cors");
 
 
 
@@ -26,6 +25,25 @@ mongoose
 
 // EXPRESS SERVER INSTANCE
 const app = express();
+
+// CORS MIDDLEWARE SETUP
+app.use(
+  cors({
+    credentials: true,
+    origin: [
+      process.env.PUBLIC_DOMAIN,
+    ],
+  })
+);
+
+ app.use((req, res, next) => {
+   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+   res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS, DELETE');
+   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+   res.setHeader('Access-Control-Allow-Credentials', true);
+   next();
+ });
+
 
 // SESSION MIDDLEWARE
 app.use(
@@ -50,6 +68,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+// ROUTER MIDDLEWARE
 app.use("/", require('./routes'));
 
 // ERROR HANDLING

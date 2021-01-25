@@ -30,12 +30,11 @@ router.post(
       else {
         const salt = bcrypt.genSaltSync(saltRounds);
         const hashPass = bcrypt.hashSync(password, salt);
-        const imgPath = './defaultpic.jpg'
         const newUser = await User.create({ 
           name,
-          password: hashPass,
           surname,
           email,
+          password: hashPass,
          });
          console.log(newUser, 'el user')
         req.session.currentUser = newUser;
@@ -59,6 +58,7 @@ router.post(
     const { email, password } = req.body;
     try {
       const user = await User.findOne({ email });
+      console.log(user, 'el user bebes')
       if (!user) {
         res.status(404).json({errorMessage: 'email not valid'})
         next(createError(404, 'email not valid'));
