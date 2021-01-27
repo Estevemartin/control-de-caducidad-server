@@ -17,11 +17,8 @@ const {
 // SIGN UP
 
 router.post(
-  "/signup",
-  isNotLoggedIn(),
-  validationLoggin(),
-  async (req, res, next) => {
-    const { name, surname, email, password, repeatPassword } = req.body;
+  "/signup", isNotLoggedIn(), validationLoggin(), async (req, res, next) => {
+    const { firstName, surname, email, password, repeatPassword } = req.body;
 
     try {
 
@@ -33,12 +30,11 @@ router.post(
         const salt = bcrypt.genSaltSync(saltRounds);
         const hashPass = bcrypt.hashSync(password, salt);
         const newUser = await User.create({
-          name,
+          firstName,
           surname,
           email,
           password: hashPass,
         });
-        console.log(newUser, "el user");
         req.session.currentUser = newUser;
         res.status(200).json(newUser);
       }
@@ -50,15 +46,10 @@ router.post(
 
 //'/login'
 
-router.post(
-  "/login",
-  isNotLoggedIn(),
-  validationLoggin(),
-  async (req, res, next) => {
+router.post("/login", isNotLoggedIn(), validationLoggin(), async (req, res, next) => {
     const { email, password } = req.body;
     try {
       const user = await User.findOne({ email });
-      console.log(user, "el user bebes");
       if (!user) {
         res.status(404).json({ errorMessage: "email not valid" });
         next(createError(404, "email not valid"));
@@ -93,18 +84,15 @@ router.get("/me", isLoggedIn(), (req, res, next) => {
 //<------------ COMPANY ------------>
 
 router.post("/add-company", async (req, res, next) => {
-  const {
-    name,
-    /* logoUrl , */ responsible,
-  } = req.body;
+  const { companyName, /* logoUrl , */ responsible } = req.body;
   const user = req.session.currentUser;
   try {
-    const company = await Company.findOne({ name });
+    const company = await Company.findOne({ companyName });
     if (company !== null) {
       return next(createError(400));
     }
     const newCompany = await Company.create({
-      name,
+      companyName,
       responsible,
     });
     res.status(200).json(newCompany);
