@@ -1,4 +1,4 @@
-/* AUTENTICATION ROUTES */
+
 
 const express = require("express");
 const router = express.Router();
@@ -7,6 +7,8 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const User = require("./models/user");
 const Company = require("./models/company");
+
+/* AUTENTICATION ROUTES */
 
 const {
   isLoggedIn,
@@ -83,8 +85,10 @@ router.get("/me", isLoggedIn(), (req, res, next) => {
 
 //<------------ COMPANY ------------>
 
+/* CREATE COMPANY */
+
 router.post("/add-company", async (req, res, next) => {
-  const { companyName, /* logoUrl , */ responsible } = req.body;
+  const { companyName, /* logoUrl , */ respName, email, invitationCode } = req.body;
   const user = req.session.currentUser;
   try {
     const company = await Company.findOne({ companyName });
@@ -93,7 +97,8 @@ router.post("/add-company", async (req, res, next) => {
     }
     const newCompany = await Company.create({
       companyName,
-      responsible,
+      invitationCode,
+      responsible : { respName, email },
     });
     res.status(200).json(newCompany);
     const updatedUser = await User.findByIdAndUpdate(
@@ -105,5 +110,22 @@ router.post("/add-company", async (req, res, next) => {
     next(error);
   }
 });
+
+
+//<------------ USER ------------>
+
+router.get("/profile/:id/my-exercises", isLoggedIn(), (req, res, next) => {
+  if(!mongoose.Types.ObjectId.isValid(req.params.id)){
+      res.status(400).json({message: "Specified id is not valid"});
+      return;
+  }
+  User.findById(req.params.id)
+    .then(userFound => {
+        res.status(200).json(userFound.exerciseCreated);
+    })
+    .catch(error => {
+        res.json(error)
+    })
+})
 
 module.exports = router;
