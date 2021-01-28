@@ -106,6 +106,8 @@ router.post("/add-company", async (req, res, next) => {
       { $addToSet: { companies: newCompany } },
       { new: true }
     );
+    req.session.currentUser = updatedUser;
+    res.status(200).json(updatedUser);
   } catch (error) {
     next(error);
   }
@@ -114,18 +116,21 @@ router.post("/add-company", async (req, res, next) => {
 
 //<------------ USER ------------>
 
-router.get("/profile/:id/my-exercises", isLoggedIn(), (req, res, next) => {
-  if(!mongoose.Types.ObjectId.isValid(req.params.id)){
-      res.status(400).json({message: "Specified id is not valid"});
-      return;
-  }
-  User.findById(req.params.id)
-    .then(userFound => {
-        res.status(200).json(userFound.exerciseCreated);
-    })
-    .catch(error => {
-        res.json(error)
-    })
-})
+//ADD COMPANY WITH CODE
+router.post("/add-company/:invitationCode", isLoggedIn(), async (req, res, next) => {
+  try {
+    const invitationCode = req.body;
+    const user = req.session.currentUser;
+    const theCompany = await Company.find(invitationCode)
+    const updatedUser = await User.findByIdAndUpdate(
+        user._id,
+        { $addToSet: { companies: theCompany } },
+        { new: true }
+      ) 
+     req.session.currentUser = updatedUser;
+     res.status(200).json(updatedUser);
+  } catch (error) {console.log(error)}
+});
+
 
 module.exports = router;
