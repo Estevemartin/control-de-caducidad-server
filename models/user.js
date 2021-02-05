@@ -8,10 +8,9 @@ const Schema = mongoose.Schema;
         password: {type: String, required: true},
         companies: [{type: Schema.Types.ObjectId, ref:'Company'}],
         activated: {type:Boolean,default:false},
-        token: {
-          value: {type:String},
-          expiration: {type:Date}
-        }
+        token: {type:String}     
+    },{
+      timestamps: true
     });
 
 const User = mongoose.model('User', userSchema);
