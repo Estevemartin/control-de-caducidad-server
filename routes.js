@@ -1,3 +1,4 @@
+/*jshint -W033 */
 const express = require("express");
 const router = express.Router();
 const createError = require("http-errors");
@@ -119,7 +120,7 @@ router.post("/saveNewPassword/:id", async (req,res,next)=>{
 router.post("/getUserInfo",async(req,res,next)=>{
   const {id} = req.body
   try{
-    const user = await User.findById(id);
+    const user = await User.findById(id).populate('companies');
     res.status(200).json(user)
   }catch(err){
     console.log(err)
@@ -179,12 +180,9 @@ router.post("/add-company", async (req, res, next) => {
     if (company !== null) {
       return next(createError(400));
     }
-    const newCompany = await Company.create({
-      companyName,
-      invitationCode,
-      responsible : { respName, email },
-    });
-    res.status(200).json(newCompany);
+    const newCompany = await Company.create({companyName, invitationCode, responsible : { respName, email }});
+    console.log(newCompany)
+    // res.status(200).json(newCompany);
     const updatedUser = await User.findByIdAndUpdate(
       user._id,
       { $addToSet: { companies: newCompany } },
@@ -210,6 +208,14 @@ router.get("/get-company/:id", isLoggedIn(), (req, res, next) => {
 
 /* USER COMPANIES LIST */
 router.get("/usercompanies/:id", isLoggedIn(), (req, res, next) => {
+  try{
+
+  }catch(err){
+    console.log(err)
+  }
+
+
+
   if(!mongoose.Types.ObjectId.isValid(req.params.id)){
       res.status(400).json({message: "Specified id is not valid"});
       return;
