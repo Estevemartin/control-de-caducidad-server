@@ -39,6 +39,7 @@ router.post("/signup", isNotLoggedIn(), validationLoggin(), async (req, res, nex
 })
 router.post("/login", validationLoggin(), async (req, res, next) => {
   const {email,password} = req.body;
+  console.log(email,password)
   try {
     const user = await User.findOne({email});
     if(!user){
@@ -196,16 +197,57 @@ router.post("/add-company", async (req, res, next) => {
 });
 
 /* COMPANY DETAILS */
-router.get("/get-company/:id", isLoggedIn(), (req, res, next) => {
-  Company.findById(req.body)
-  .then(companyFound => {
-      res.status(200).json(companyFound);
-  })
-  .catch(error => {
-      res.json(error)
-  })
+router.post("/getCompanyDetails", isLoggedIn(), async (req, res, next) => {
+  try{
+    const company = await Company.findById(req.body.id)
+    res.status(200).json(company)
+    // console.log(company)
+  }catch(err){
+    console.log(err)
+  }
 })
 
+router.post("/createNewItem",isLoggedIn(),async(req,res,next)=>{
+  try{
+    console.log("INSIDE BACKEND")
+    const {itemName, itemResponsibleName, itemResponsibleEmail, validityPeriodValue, validityPeriodUnits, noticePeriodValue, noticePeriodUnits, companyId}=req.body
+    const item = await Item.create({
+      itemName:itemName,
+      companyId:companyId, 
+      validity:{
+        number:validityPeriodValue,
+        units:validityPeriodUnits},
+      responsible:{
+        name:itemResponsibleName,
+        email:itemResponsibleEmail
+      },
+      reminders:{
+        timeInAdvance:{
+          number:noticePeriodValue,
+          units:noticePeriodUnits
+        }
+      }
+    })
+    // console.log("ITEM:", item)
+    let updatedCompany = await Company.findByIdAndUpdate(companyId, {$push: { items: item._id }} )
+    res.status(200).json(item)
+  }catch(err){
+    console.log(err)
+  }
+})
+
+router.post("/getItemDetails",isLoggedIn(),async(req,res,next)=>{
+  try{
+    const {itemsList} = req.body
+    // console.log(itemsList)
+    const detailedItems = await Item.find({'_id':{$in:itemsList}})
+    console.log(detailedItems)
+    res.status(200).json(detailedItems)
+    // var detailedItems =[]
+  }catch(err){
+    console.log(err)
+  }
+})
 /* USER COMPANIES LIST */
 router.get("/usercompanies/:id", isLoggedIn(), (req, res, next) => {
   try{
