@@ -182,7 +182,7 @@ router.post("/add-company", async (req, res, next) => {
       return next(createError(400));
     }
     const newCompany = await Company.create({companyName, invitationCode, responsible : { respName, email }});
-    console.log(newCompany)
+    // console.log(newCompany)
     // res.status(200).json(newCompany);
     const updatedUser = await User.findByIdAndUpdate(
       user._id,
@@ -199,9 +199,9 @@ router.post("/add-company", async (req, res, next) => {
 /* COMPANY DETAILS */
 router.post("/getCompanyDetails", isLoggedIn(), async (req, res, next) => {
   try{
-    const company = await Company.findById(req.body.id)
-    res.status(200).json(company)
+    const company = await Company.findById(req.body.id).populate('items')
     // console.log(company)
+    res.status(200).json(company)
   }catch(err){
     console.log(err)
   }
@@ -238,11 +238,11 @@ router.post("/createNewItem",isLoggedIn(),async(req,res,next)=>{
 
 router.post("/getItemDetails",isLoggedIn(),async(req,res,next)=>{
   try{
-    const {itemsList} = req.body
-    // console.log(itemsList)
-    const detailedItems = await Item.find({'_id':{$in:itemsList}})
-    console.log(detailedItems)
-    res.status(200).json(detailedItems)
+    const {itemId} = req.body
+    // console.log(itemId)
+    const item = await Item.findById({'_id':itemId}).populate('companyId')
+    // console.log(item)
+    res.status(200).json(item)
     // var detailedItems =[]
   }catch(err){
     console.log(err)
