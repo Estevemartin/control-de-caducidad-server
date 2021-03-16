@@ -121,7 +121,14 @@ router.post("/saveNewPassword/:id", async (req,res,next)=>{
 router.post("/getUserInfo",async(req,res,next)=>{
   const {id} = req.body
   try{
-    const user = await User.findById(id).populate('companies');
+    const user =await User.findById(id)
+      .populate({
+        path:'companies',
+        populate:{
+          path:'items',
+          model:'Item'
+        }})
+        // console.log(user)
     res.status(200).json(user)
   }catch(err){
     console.log(err)
@@ -177,10 +184,10 @@ router.post("/add-company", async (req, res, next) => {
   const { companyName, /* logoUrl , */ respName, email, invitationCode } = req.body;
   const user = req.session.currentUser;
   try {
-    const company = await Company.findOne({ companyName });
-    if (company !== null) {
-      return next(createError(400));
-    }
+    // const company = await Company.findOne({ companyName });
+    // if (company !== null) {
+    //   return next(createError(400));
+    // }
     const newCompany = await Company.create({companyName, invitationCode, responsible : { respName, email }});
     // console.log(newCompany)
     // res.status(200).json(newCompany);
@@ -199,7 +206,7 @@ router.post("/add-company", async (req, res, next) => {
 /* COMPANY DETAILS */
 router.post("/getCompanyDetails", isLoggedIn(), async (req, res, next) => {
   try{
-    const company = await Company.findById(req.body.id).populate('items')
+    const company = await Company.findById(req.body.id).populate('items').populate('workers')
     // console.log(company)
     res.status(200).json(company)
   }catch(err){
@@ -249,26 +256,32 @@ router.post("/getItemDetails",isLoggedIn(),async(req,res,next)=>{
   }
 })
 /* USER COMPANIES LIST */
-router.get("/usercompanies/:id", isLoggedIn(), (req, res, next) => {
+router.get("/usercompanies/:id", isLoggedIn(),async  (req, res, next) => {
   try{
-
+    if(!mongoose.Types.ObjectId.isValid(req.params.id)){
+      res.status(400).json({message: "Specified id is not valid"});
+      return;
+    }
+    const userFound = await User.findById(req.params.id).populate('companies')
+    res.status(400).json(userFound.companies)
   }catch(err){
     console.log(err)
   }
+})
 
-
-
-  if(!mongoose.Types.ObjectId.isValid(req.params.id)){
-      res.status(400).json({message: "Specified id is not valid"});
-      return;
+router.post("/addEmployee", isLoggedIn(), async (req, res, next) => {
+  try{
+    const {name,surname,email,companyId} = req.body
+    console.log(name,surname,email,companyId)
+    const newEmployee = await Worker.create({name:name,surname:surname,email:email,company:companyId})
+    // console.log(newEmployee)
+    const updatedCompany = await Company.findByIdAndUpdate(companyId, {$addToSet:{workers:newEmployee._id}}, {new: true}).populate('workers');
+    // console.log(updatedCompany)
+    res.status(200).json(updatedCompany)
+  }catch(err){
+    console.log(err)
+    res.status(400).json({message:"Something went wrong."})
   }
-  User.findById(req.params.id).populate('companies')
-    .then(userFound => {
-        res.status(200).json(userFound.companies);
-    })
-    .catch(error => {
-        res.json(error)
-    })
 })
 
 
